@@ -9,7 +9,6 @@ parameters:
         - database
         - tests
     excludePaths:
-        - tests/ArchTest.php
     tmpDir: build/phpstan
     checkOctaneCompatibility: true
     checkModelProperties: true

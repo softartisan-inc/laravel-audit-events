@@ -3,10 +3,12 @@
 namespace SoftArtisan\LaravelModelAudits\Concerns;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Trait IsAuditable
@@ -36,10 +38,7 @@ trait IsAuditable
     public static function bootIsAuditable(): void
     {
         /** @param Model&self $model */
-        static::created(function (Model $model): void {
-            if (! $model instanceof self) {
-                return; // PHPStan safety guard
-            }
+        static::created(function ($model) {
             if (! config('model-audits.audit_on_create', true)) {
                 return;
             }
@@ -50,9 +49,9 @@ trait IsAuditable
 
         /** @param Model&self $model */
         static::updated(function (Model $model): void {
-            if (! $model instanceof self) {
+            /*if (! $model instanceof self) {
                 return; // PHPStan safety guard
-            }
+            }*/
             if (! config('model-audits.audit_on_update', true)) {
                 return;
             }

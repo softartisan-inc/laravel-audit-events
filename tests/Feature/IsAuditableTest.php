@@ -3,12 +3,14 @@
 use Illuminate\Support\Arr;
 use SoftArtisan\LaravelModelAudits\Tests\Fixtures\Article;
 use SoftArtisan\LaravelModelAudits\Tests\Fixtures\SoftArticle;
+
 // TestCase is registered globally in tests/Pest.php
 
 // Helper to get configured table field names for assertions
 // This keeps tests stable even if config keys are customized.
 
-function getFields(): array {
+function getFields(): array
+{
     return config('model-audits.table_fields');
 }
 

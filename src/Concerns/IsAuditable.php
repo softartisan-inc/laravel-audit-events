@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Schema;
-use SoftArtisan\LaravelModelAudits\Exceptions\UnknowEventException;
 
 /**
  * Trait IsAuditable
@@ -39,7 +38,7 @@ trait IsAuditable
     public static function bootIsAuditable(): void
     {
         static::created(function ($model) {
-            if (!config('model-audits.audit_on_create', true)) {
+            if (! config('model-audits.audit_on_create', true)) {
                 return;
             }
             // On create, there are no old values.
@@ -48,7 +47,7 @@ trait IsAuditable
         });
 
         static::updated(function ($model) {
-            if (!config('model-audits.audit_on_update', true)) {
+            if (! config('model-audits.audit_on_update', true)) {
                 return;
             }
             $changes = $model->getChanges();
@@ -72,6 +71,7 @@ trait IsAuditable
             if (method_exists($model, 'isForceDeleting') && ! $model->isForceDeleting()) {
                 // It's a soft delete, record it as deleted
                 $model->recordAudit('deleted', $model->getAttributes(), []);
+
                 return;
             }
 
@@ -94,12 +94,6 @@ trait IsAuditable
     }
 
     /**
-     * @param string $event
-     * @param array $oldValues
-     * @param array $newValues
-     * @return void
-     */
-    /**
      * Persist a single audit entry.
      *
      * Uses the configured table field names and hides attributes declared in
@@ -112,6 +106,7 @@ trait IsAuditable
             if (env('APP_DEBUG')) {
                 Log::warning("Event '$event' is not registered in the model audits configuration.");
             }
+
             return;
         }
 
@@ -122,13 +117,13 @@ trait IsAuditable
         $fields = config('model-audits.table_fields');
 
         $this->audits()->create([
-            $fields['event']      => $event,
-            $fields['user_id']    => Auth::id(),
-            $fields['url']        => Request::fullUrl(),
+            $fields['event'] => $event,
+            $fields['user_id'] => Auth::id(),
+            $fields['url'] => Request::fullUrl(),
             $fields['ip_address'] => Request::ip(),
             $fields['user_agent'] => Request::userAgent(),
             $fields['old_values'] => $oldValues,
-            $fields['new_values'] => $newValues
+            $fields['new_values'] => $newValues,
         ]);
     }
 
@@ -139,6 +134,7 @@ trait IsAuditable
     public function getHiddenForAudit(): array
     {
         $defaultHidden = config('model-audits.global_hidden');
+
         return array_merge($defaultHidden, $this->hidden_for_audit ?? []);
     }
 
@@ -223,6 +219,7 @@ trait IsAuditable
     {
         $days = (int) config('model-audits.pruning.keep_for_days', 90);
         $column = $this->getCreatedAtColumn();
+
         return static::where($column, '<=', now()->subDays($days));
     }
 
@@ -284,9 +281,6 @@ trait IsAuditable
     /**
      * Retrieve the overall history or filter it by event.
      * Returns the relation to allow chaining (ex: ->get(), ->paginate()).
-     *
-     * @param string|null $event
-     * @return MorphMany
      */
     public function getAuditHistory(?string $event = null): MorphMany
     {
@@ -311,8 +305,6 @@ trait IsAuditable
 
     /**
      * Retrieve the updated history for the associated model.
-     *
-     * @return MorphMany
      */
     public function getUpdatedHistory(): MorphMany
     {

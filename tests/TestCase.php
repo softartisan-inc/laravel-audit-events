@@ -40,7 +40,7 @@ class TestCase extends Orchestra
     protected function defineDatabaseMigrations(): void
     {
         // Charger les migrations du package
-        $this->loadMigrationsFrom(realpath(__DIR__ . '/../database/migrations'));
+        $this->loadMigrationsFrom(realpath(__DIR__.'/../database/migrations'));
 
         // Créer la table articles pour les tests
         Schema::create('articles', function (Blueprint $table) {

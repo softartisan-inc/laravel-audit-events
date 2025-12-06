@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::create('model_audits', function (Blueprint $table) {
@@ -13,7 +14,6 @@ return new class extends Migration {
 
             $morphName = config('model-audits.table_fields.morph_prefix');
             $morphType = config('model-audits.table_fields.morph_type', 'integer');
-
 
             // Création manuelle pour plus de contrôle
             $table->string("{$morphName}_type");

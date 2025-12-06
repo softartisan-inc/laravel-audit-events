@@ -7,6 +7,11 @@ parameters:
         - src
         - config
         - database
+        - tests
+    excludePaths:
+        - tests/ArchTest.php
     tmpDir: build/phpstan
     checkOctaneCompatibility: true
     checkModelProperties: true
+    # Note: we include tests in the analysis so that symbols used only in tests
+    # (like traits mixed into test models) are recognized as used by PHPStan.

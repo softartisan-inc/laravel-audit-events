@@ -3,13 +3,10 @@
 namespace SoftArtisan\LaravelModelAudits\Concerns;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
-use Illuminate\Support\Facades\Schema;
-use SoftArtisan\LaravelModelAudits\Exceptions\UnknowEventException;
 
 /**
  * Trait IsAuditable
@@ -38,8 +35,12 @@ trait IsAuditable
      */
     public static function bootIsAuditable(): void
     {
-        static::created(function ($model) {
-            if (!config('model-audits.audit_on_create', true)) {
+        /** @param Model&self $model */
+        static::created(function (Model $model): void {
+            if (! $model instanceof self) {
+                return; // PHPStan safety guard
+            }
+            if (! config('model-audits.audit_on_create', true)) {
                 return;
             }
             // On create, there are no old values.
@@ -47,8 +48,12 @@ trait IsAuditable
             $model->recordAudit('created', [], $model->getAttributes());
         });
 
-        static::updated(function ($model) {
-            if (!config('model-audits.audit_on_update', true)) {
+        /** @param Model&self $model */
+        static::updated(function (Model $model): void {
+            if (! $model instanceof self) {
+                return; // PHPStan safety guard
+            }
+            if (! config('model-audits.audit_on_update', true)) {
                 return;
             }
             $changes = $model->getChanges();
@@ -64,22 +69,32 @@ trait IsAuditable
             }
 
             // Persist only what existed BEFORE the update
+            // @phpstan-ignore-next-line Model is guaranteed to be using this trait
             $model->recordAudit('updated', $old, $changes);
         });
 
-        static::deleted(function ($model) {
+        /** @param Model&self $model */
+        static::deleted(function (Model $model): void {
+            if (! $model instanceof self) {
+                return; // PHPStan safety guard
+            }
             // Check if the model uses SoftDeletes and if it is being force deleted
+            // @phpstan-ignore-next-line SoftDeletes presence is model-specific and known at runtime
             if (method_exists($model, 'isForceDeleting') && ! $model->isForceDeleting()) {
                 // It's a soft delete, record it as deleted
+                // @phpstan-ignore-next-line Model is guaranteed to be using this trait
                 $model->recordAudit('deleted', $model->getAttributes(), []);
+
                 return;
             }
 
             // It is a hard delete (or model doesn't use SoftDeletes)
             if (config('model-audits.remove_on_delete', false)) {
+                // @phpstan-ignore-next-line audits() exists via this trait
                 $model->audits()->delete();
             } else {
                 // On delete, the old values are everything we had
+                // @phpstan-ignore-next-line Model is guaranteed to be using this trait
                 $model->recordAudit('deleted', $model->getAttributes(), []);
             }
         });
@@ -94,12 +109,6 @@ trait IsAuditable
     }
 
     /**
-     * @param string $event
-     * @param array $oldValues
-     * @param array $newValues
-     * @return void
-     */
-    /**
      * Persist a single audit entry.
      *
      * Uses the configured table field names and hides attributes declared in
@@ -109,9 +118,10 @@ trait IsAuditable
     protected function recordAudit(string $event, array $oldValues, array $newValues): void
     {
         if (! in_array($event, config('model-audits.events', []))) {
-            if (env('APP_DEBUG')) {
+            if (config('app.debug')) {
                 Log::warning("Event '$event' is not registered in the model audits configuration.");
             }
+
             return;
         }
 
@@ -122,13 +132,13 @@ trait IsAuditable
         $fields = config('model-audits.table_fields');
 
         $this->audits()->create([
-            $fields['event']      => $event,
-            $fields['user_id']    => Auth::id(),
-            $fields['url']        => Request::fullUrl(),
+            $fields['event'] => $event,
+            $fields['user_id'] => Auth::id(),
+            $fields['url'] => Request::fullUrl(),
             $fields['ip_address'] => Request::ip(),
             $fields['user_agent'] => Request::userAgent(),
             $fields['old_values'] => $oldValues,
-            $fields['new_values'] => $newValues
+            $fields['new_values'] => $newValues,
         ]);
     }
 
@@ -139,136 +149,8 @@ trait IsAuditable
     public function getHiddenForAudit(): array
     {
         $defaultHidden = config('model-audits.global_hidden');
+
         return array_merge($defaultHidden, $this->hidden_for_audit ?? []);
-    }
-
-    /**
-     * Relationship to the user ("causer").
-     * Uses the configured resolver when provided, otherwise attempts
-     * to infer the user model from the Auth configuration.
-     */
-    public function user(): BelongsTo
-    {
-        $fields = config('model-audits.table_fields');
-        $userModel = $this->resolveUserModelClass();
-
-        return $this->belongsTo($userModel, $fields['user_id']);
-    }
-
-    /**
-     * Restore the parent (auditable) model to the state described in old_values.
-     * Columns that no longer exist in the table are ignored.
-     *
-     * @return \Illuminate\Database\Eloquent\Model|null The restored model (or null if not found)
-     */
-    public function restore(): ?Model
-    {
-        $auditable = $this->auditable;
-        if (! $auditable) {
-            return null;
-        }
-
-        $fields = config('model-audits.table_fields');
-        $oldValues = (array) ($this->getAttribute($fields['old_values']) ?? []);
-
-        if (empty($oldValues)) {
-            // Nothing to restore
-            return $auditable;
-        }
-
-        $table = $auditable->getTable();
-        $filtered = [];
-        foreach ($oldValues as $column => $value) {
-            if (Schema::hasColumn($table, $column)) {
-                $filtered[$column] = $value;
-            }
-        }
-
-        if (! empty($filtered)) {
-            // Use forceFill to bypass fillable/guarded rules.
-            $auditable->forceFill($filtered);
-            $auditable->save();
-        }
-
-        return $auditable;
-    }
-
-    /**
-     * Return a simplified differences map between old_values and new_values.
-     * Example: [ 'name' => ['old' => 'A', 'new' => 'B'] ]
-     */
-    public function getDiff(): array
-    {
-        $fields = config('model-audits.table_fields');
-        $old = (array) ($this->getAttribute($fields['old_values']) ?? []);
-        $new = (array) ($this->getAttribute($fields['new_values']) ?? []);
-
-        $keys = array_unique(array_merge(array_keys($old), array_keys($new)));
-        $diff = [];
-        foreach ($keys as $key) {
-            $o = $old[$key] ?? null;
-            $n = $new[$key] ?? null;
-            if ($o !== $n) {
-                $diff[$key] = ['old' => $o, 'new' => $n];
-            }
-        }
-
-        return $diff;
-    }
-
-    /**
-     * Automatic pruning configuration (Prunable).
-     */
-    public function prunable()
-    {
-        $days = (int) config('model-audits.pruning.keep_for_days', 90);
-        $column = $this->getCreatedAtColumn();
-        return static::where($column, '<=', now()->subDays($days));
-    }
-
-    /**
-     * Dynamically resolve the User model class for the user() relationship.
-     */
-    protected function resolveUserModelClass(): string
-    {
-        // 1) If a resolver is defined, try to infer the class from it
-        $resolver = config('model-audits.user.resolver');
-        if (is_callable($resolver)) {
-            try {
-                $user = call_user_func($resolver);
-                if ($user) {
-                    return get_class($user);
-                }
-            } catch (\Throwable $e) {
-                // Ignore and fallback
-            }
-        }
-
-        // 2) Inspect the guards declared in the package configuration
-        $guards = (array) config('model-audits.user.guards', []);
-        foreach ($guards as $guard) {
-            $providerName = config("auth.guards.$guard.provider");
-            if ($providerName) {
-                $model = config("auth.providers.$providerName.model");
-                if (is_string($model) && class_exists($model)) {
-                    return $model;
-                }
-            }
-        }
-
-        // 3) Fallback: Laravel's default User model
-        if (class_exists('App\\Models\\User')) {
-            return 'App\\Models\\User';
-        }
-
-        // 4) Last resort: try to get the class from the current authenticated user
-        $current = Auth::user();
-        if ($current) {
-            return get_class($current);
-        }
-
-        // Default value, should not be reached in a standard Laravel project
-        return Model::class;
     }
 
     /**
@@ -284,9 +166,6 @@ trait IsAuditable
     /**
      * Retrieve the overall history or filter it by event.
      * Returns the relation to allow chaining (ex: ->get(), ->paginate()).
-     *
-     * @param string|null $event
-     * @return MorphMany
      */
     public function getAuditHistory(?string $event = null): MorphMany
     {
@@ -311,8 +190,6 @@ trait IsAuditable
 
     /**
      * Retrieve the updated history for the associated model.
-     *
-     * @return MorphMany
      */
     public function getUpdatedHistory(): MorphMany
     {

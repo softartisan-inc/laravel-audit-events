@@ -8,6 +8,7 @@ use SoftArtisan\LaravelModelAudits\Models\ModelAudit;
 class ModelAuditFactory extends Factory
 {
     protected $model = ModelAudit::class;
+
     public function definition()
     {
         return [

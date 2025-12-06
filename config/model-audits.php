@@ -32,16 +32,16 @@ return [
     |
     */
     'table_fields' => [
-        'id'           => 'audit_id',      // Primary key of the audit row
-        'user_id'      => 'user_id',       // Foreign key to the user who performed the change
-        'event'        => 'event',         // Event name: created, updated, deleted, restored
+        'id' => 'audit_id',      // Primary key of the audit row
+        'user_id' => 'user_id',       // Foreign key to the user who performed the change
+        'event' => 'event',         // Event name: created, updated, deleted, restored
         'morph_prefix' => 'auditable',     // Generates auditable_id and auditable_type
-        'morph_type'   => 'string',        // One of: string, integer, uuid, ulid
-        'url'          => 'url',           // Request URL
-        'ip_address'   => 'ip_address',    // Request IP
-        'user_agent'   => 'user_agent',    // Request UA
-        'old_values'   => 'old_values',    // JSON column storing previous attributes
-        'new_values'   => 'new_values',    // JSON column storing new attributes
+        'morph_type' => 'string',        // One of: string, integer, uuid, ulid
+        'url' => 'url',           // Request URL
+        'ip_address' => 'ip_address',    // Request IP
+        'user_agent' => 'user_agent',    // Request UA
+        'old_values' => 'old_values',    // JSON column storing previous attributes
+        'new_values' => 'new_values',    // JSON column storing new attributes
     ],
 
     // Toggle which model lifecycle events produce audits

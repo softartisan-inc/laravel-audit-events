@@ -8,12 +8,7 @@ use SoftArtisan\LaravelModelAudits\Concerns\IsAuditable;
 
 class SoftArticle extends Model
 {
-    // Résoudre le conflit de méthode restore entre SoftDeletes et IsAuditable
-    use SoftDeletes, IsAuditable {
-        SoftDeletes::restore insteadof IsAuditable;
-        IsAuditable::restore as auditRestore; // alias si besoin dans d'autres tests
-        IsAuditable::getHiddenForAudit as protected getHiddenForAuditFromTrait;
-    }
+    use IsAuditable, SoftDeletes { IsAuditable::getHiddenForAudit as protected getHiddenForAuditFromTrait; }
 
     protected $table = 'soft_articles';
 

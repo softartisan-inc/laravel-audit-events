@@ -3,12 +3,11 @@
 namespace SoftArtisan\LaravelModelAudits\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use SoftArtisan\LaravelModelAudits\Models\ModelAudit;
 
-/*
-class ModelFactory extends Factory
+class ModelAuditFactory extends Factory
 {
-    protected $model = YourModel::class;
-
+    protected $model = ModelAudit::class;
     public function definition()
     {
         return [
@@ -16,4 +15,3 @@ class ModelFactory extends Factory
         ];
     }
 }
-*/

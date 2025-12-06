@@ -1,12 +1,12 @@
 <?php
 
-namespace VendorName\Skeleton\Commands;
+namespace SoftArtisan\LaravelModelAudits\Commands;
 
 use Illuminate\Console\Command;
 
-class SkeletonCommand extends Command
+class LaravelModelAuditsCommand extends Command
 {
-    public $signature = 'skeleton';
+    public $signature = 'laravel-model-audits';
 
     public $description = 'My command';
 

@@ -1,68 +1,128 @@
-# :package_description
+# Laravel Model Audits
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/:vendor_slug/:package_slug.svg?style=flat-square)](https://packagist.org/packages/:vendor_slug/:package_slug)
-[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/:vendor_slug/:package_slug/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/:vendor_slug/:package_slug/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/:vendor_slug/:package_slug/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/:vendor_slug/:package_slug/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
-[![Total Downloads](https://img.shields.io/packagist/dt/:vendor_slug/:package_slug.svg?style=flat-square)](https://packagist.org/packages/:vendor_slug/:package_slug)
-<!--delete-->
----
-This repo can be used to scaffold a Laravel package. Follow these steps to get started:
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/softartisan/laravel-model-audits.svg?style=flat-square)](https://packagist.org/packages/softartisan/laravel-model-audits)
+[![Total Downloads](https://img.shields.io/packagist/dt/softartisan/laravel-model-audits.svg?style=flat-square)](https://packagist.org/packages/softartisan/laravel-model-audits)
+[![License](https://img.shields.io/packagist/l/softartisan/laravel-model-audits.svg?style=flat-square)](LICENSE.md)
 
-1. Press the "Use this template" button at the top of this repo to create a new repo with the contents of this skeleton.
-2. Run "php ./configure.php" to run a script that will replace all placeholders throughout all the files.
-3. Have fun creating your package.
-4. If you need help creating a package, consider picking up our <a href="https://laravelpackage.training">Laravel Package Training</a> video course.
----
-<!--/delete-->
-This is where your description should go. Limit it to a paragraph or two. Consider adding a small example.
+Laravel Model Audits is a lightweight and robust package to automatically audit and track model changes. It records old and new values, the authenticated user, IP address, URL, user agent, and the event type (created, updated, deleted, restored) via a simple trait.
 
-## Support us
-
-[<img src="https://github-ads.s3.eu-central-1.amazonaws.com/:package_name.jpg?t=1" width="419px" />](https://spatie.be/github-ad-click/:package_name)
-
-We invest a lot of resources into creating [best in class open source packages](https://spatie.be/open-source). You can support us by [buying one of our paid products](https://spatie.be/open-source/support-us).
-
-We highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using. You'll find our address on [our contact page](https://spatie.be/about-us). We publish all received postcards on [our virtual postcard wall](https://spatie.be/open-source/postcards).
+It automatically records:
+- Who made the change (user ID)
+- What happened (created, updated, deleted, restored)
+- When it happened
+- Where it came from (URL, IP address, user agent)
+- Details: the exact old_values and new_values for modified attributes
 
 ## Installation
 
-You can install the package via composer:
+Install via Composer:
 
 ```bash
-composer require :vendor_slug/:package_slug
+composer require softartisan/laravel-model-audits
 ```
 
-You can publish and run the migrations with:
+Publish the config file (optional, recommended):
 
 ```bash
-php artisan vendor:publish --tag=":package_slug-migrations"
+php artisan vendor:publish --tag="laravel-model-audits-config"
+```
+
+Publish the migration and run it:
+
+```bash
+php artisan vendor:publish --tag="laravel-model-audits-migrations"
 php artisan migrate
 ```
 
-You can publish the config file with:
+## Quick start: use the trait
 
-```bash
-php artisan vendor:publish --tag=":package_slug-config"
-```
-
-This is the contents of the published config file:
+Add the IsAuditable trait to any Eloquent model you want to audit:
 
 ```php
-return [
-];
+use Illuminate\Database\Eloquent\Model;
+use SoftArtisan\LaravelModelAudits\Concerns\IsAuditable;
+
+class Post extends Model
+{
+    use IsAuditable;
+
+    protected $fillable = ['title', 'content', 'secret_token'];
+}
 ```
 
-Optionally, you can publish the views using
+That's it. Creating, updating, or deleting this model will create audit rows.
 
-```bash
-php artisan vendor:publish --tag=":package_slug-views"
-```
-
-## Usage
+Query audits for a model instance:
 
 ```php
-$variable = new VendorName\Skeleton();
-echo $variable->echoPhrase('Hello, VendorName!');
+$post = Post::find(1);
+$audits = $post->audits()->latest('audit_id')->get();
+```
+
+## Mask sensitive fields
+
+The package never logs attributes listed in the global_hidden config. You can also hide per‑model fields by overriding getHiddenForAudit() or using the hidden_for_audit array property.
+
+```php
+class Post extends Model
+{
+    use IsAuditable;
+
+    protected array $hidden_for_audit = ['secret_token'];
+}
+```
+
+## Behavior with SoftDeletes and forceDelete
+
+- Soft delete (delete()) always records a "deleted" audit with old_values
+- forceDelete():
+  - remove_on_delete=true (default) deletes all audits for the model
+  - remove_on_delete=false keeps existing audits and records one extra "deleted" audit
+
+## Configuration highlights
+
+Edit config/model-audits.php to adjust behavior:
+
+- audit_on_create, audit_on_update: toggle which events are recorded
+- remove_on_delete: how to handle audits when a record is permanently deleted
+- table_fields: customize column names used by the audits table
+- user.guards or user.resolver: control which user is linked to each audit row
+- pruning: enable automatic cleanup of old audit rows
+
+## Helpful APIs
+
+On your auditable models:
+
+- audits(): MorphMany relation to ModelAudit
+- getDiff(): returns [attribute => ['old' => x, 'new' => y]] for a given audit
+- restore(): applies the old_values of a given audit back to the model (ignores removed columns)
+
+Example of restoring using a specific audit entry:
+
+```php
+$audit = $post->audits()->latest('audit_id')->first();
+$audit->restore();
+```
+
+## Pruning old audits
+
+Enable pruning in the config and schedule Laravel's prune command:
+
+```php
+// config/model-audits.php
+'pruning' => [
+    'enabled' => true,
+    'keep_for_days' => 90,
+],
+```
+
+Then schedule pruning (app/Console/Kernel.php):
+
+```php
+protected function schedule(Schedule $schedule): void
+{
+    $schedule->command('model:prune')->daily();
+}
 ```
 
 ## Testing
@@ -75,18 +135,9 @@ composer test
 
 Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
 
-## Contributing
-
-Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
-
-## Security Vulnerabilities
+## Security
 
 Please review [our security policy](../../security/policy) on how to report security vulnerabilities.
-
-## Credits
-
-- [:author_name](https://github.com/:author_username)
-- [All Contributors](../../contributors)
 
 ## License
 

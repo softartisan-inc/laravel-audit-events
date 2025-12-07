@@ -142,3 +142,43 @@ Please review [our security policy](../../security/policy) on how to report secu
 ## License
 
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+
+## AI & Model Context Protocol (MCP)
+
+This package provides an optional integration with Laravel MCP (Model Context Protocol) to let AI agents retrieve and analyze your model audits via a dedicated MCP server.
+
+Optional installation:
+
+1) Require MCP in your application (optional):
+
+```bash
+composer require laravel/mcp
+```
+
+2) Register the server (choose one or both transports):
+
+```php
+use SoftArtisan\LaravelModelAudits\Integrations\Mcp\ModelAuditsServer;
+use Illuminate\Support\Facades\Mcp;
+
+// Web transport (HTTP)
+Mcp::server('model-audits', ModelAuditsServer::class);
+
+// Local transport (STDIO)
+Mcp::local('model-audits', ModelAuditsServer::class);
+```
+
+What’s included:
+
+- Tool: get-model-audit-history (SoftArtisan\LaravelModelAudits\Mcp\Tools\AuditHistoryTool)
+  - Inputs: model_class (string), model_id (string|int), limit (int)
+  - Returns a structured list of audits with compact diffs from `$audit->getDiff()`
+- Prompt: analyze_model_changes (SoftArtisan\LaravelModelAudits\Mcp\Prompts\AuditAnalysisPrompt)
+  - Guides the AI to call the tool and summarize/flag suspicious changes
+- Server: ModelAuditsServer (SoftArtisan\LaravelModelAudits\Integrations\Mcp\ModelAuditsServer)
+  - Exposes the above tool and prompt to clients via MCP
+
+Notes:
+
+- The MCP dependency is optional and declared under composer "suggest". Install `laravel/mcp` only if you want AI/MCP features.
+- The tool supports both FQCN (e.g. `App\\Models\\Post`) or Laravel morph aliases as `model_class`.

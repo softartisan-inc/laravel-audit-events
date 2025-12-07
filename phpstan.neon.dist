@@ -9,6 +9,7 @@ parameters:
         - database
         - tests
     excludePaths:
+    - src/Mcp/*
     tmpDir: build/phpstan
     checkOctaneCompatibility: true
     checkModelProperties: true

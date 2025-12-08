@@ -125,24 +125,6 @@ protected function schedule(Schedule $schedule): void
 }
 ```
 
-## Testing
-
-```bash
-composer test
-```
-
-## Changelog
-
-Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
-
-## Security
-
-Please review [our security policy](../../security/policy) on how to report security vulnerabilities.
-
-## License
-
-The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
-
 ## AI & Model Context Protocol (MCP)
 
 This package provides an optional integration with Laravel MCP (Model Context Protocol) to let AI agents retrieve and analyze your model audits via a dedicated MCP server.
@@ -171,14 +153,33 @@ Mcp::local('model-audits', ModelAuditsServer::class);
 What’s included:
 
 - Tool: get-model-audit-history (SoftArtisan\LaravelModelAudits\Mcp\Tools\AuditHistoryTool)
-  - Inputs: model_class (string), model_id (string|int), limit (int)
-  - Returns a structured list of audits with compact diffs from `$audit->getDiff()`
+    - Inputs: model_class (string), model_id (string|int), limit (int)
+    - Returns a structured list of audits with compact diffs from `$audit->getDiff()`
 - Prompt: analyze_model_changes (SoftArtisan\LaravelModelAudits\Mcp\Prompts\AuditAnalysisPrompt)
-  - Guides the AI to call the tool and summarize/flag suspicious changes
+    - Guides the AI to call the tool and summarize/flag suspicious changes
 - Server: ModelAuditsServer (SoftArtisan\LaravelModelAudits\Integrations\Mcp\ModelAuditsServer)
-  - Exposes the above tool and prompt to clients via MCP
+    - Exposes the above tool and prompt to clients via MCP
 
 Notes:
 
 - The MCP dependency is optional and declared under composer "suggest". Install `laravel/mcp` only if you want AI/MCP features.
 - The tool supports both FQCN (e.g. `App\\Models\\Post`) or Laravel morph aliases as `model_class`.
+
+
+## Testing
+
+```bash
+composer test
+```
+
+## Changelog
+
+Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
+
+## Security
+
+Please review [our security policy](../../security/policy) on how to report security vulnerabilities.
+
+## License
+
+The MIT License (MIT). Please see [License File](LICENSE.md) for more information.

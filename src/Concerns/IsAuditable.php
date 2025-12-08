@@ -20,12 +20,6 @@ use Illuminate\Support\Facades\Request;
 trait IsAuditable
 {
     /**
-     * Additional attributes to be excluded from old/new values for this model.
-     * These are merged with the global_hidden configuration.
-     */
-    protected array $hidden_for_audit = [];
-
-    /**
      * Register Eloquent model event listeners for auditing.
      *
      * Respects configuration flags:

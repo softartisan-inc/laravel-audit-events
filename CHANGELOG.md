@@ -2,6 +2,14 @@
 
 All notable changes to `laravel-model-audits` will be documented in this file.
 
+## v1.1.1 - 2025-12-08
+
+### What's Changed
+
+* Add hidden audit fields on model properties by @henoc35 in https://github.com/softartisan-inc/laravel-model-audits/pull/4
+
+**Full Changelog**: https://github.com/softartisan-inc/laravel-model-audits/compare/v1.1.0...v1.1.1
+
 ## v1.1.0 - 2025-12-07
 
 ### What's Changed

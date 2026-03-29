@@ -4,6 +4,7 @@ namespace SoftArtisan\LaravelAuditEvents\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use SoftArtisan\LaravelAuditEvents\Models\ModelAudit;
 
 class AuditEventsStatsCommand extends Command
@@ -108,6 +109,23 @@ class AuditEventsStatsCommand extends Command
             }
         } catch (\Throwable) {
             // Table size query not supported on this driver
+        }
+
+        // ── Archive stats ──────────────────────────────────────────────────
+        if (config('audit-events.archive.enabled', false)) {
+            $archiveTable = config('audit-events.archive.table_name', 'audit_events_archive');
+
+            if (Schema::hasTable($archiveTable)) {
+                $archiveTotal = DB::table($archiveTable)->count();
+                $archiveOldest = DB::table($archiveTable)->min('archived_at');
+                $archiveNewest = DB::table($archiveTable)->max('archived_at');
+
+                $this->line('');
+                $this->line('  <options=bold>Archive</>');
+                $this->line("  Archived records : <fg=yellow;options=bold>{$archiveTotal}</>");
+                $this->line("  Oldest archived  : <fg=green>{$archiveOldest}</>");
+                $this->line("  Newest archived  : <fg=green>{$archiveNewest}</>");
+            }
         }
 
         $this->info('');

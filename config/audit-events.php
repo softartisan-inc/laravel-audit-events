@@ -143,4 +143,67 @@ return [
         'enabled' => false,
         'keep_for_days' => 365,  // Override per-tenant for different retention policies
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cryptographic Integrity
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, every new audit record receives an HMAC signature covering
+    | its payload fields. A hash chain is maintained per (auditable_type,
+    | auditable_id) tuple: each new record's signed payload includes the
+    | previous record's signature as `previous_hash`, making insertion,
+    | deletion, or reordering of rows detectable within a model's history.
+    |
+    | key:       Signing key. Null falls back to APP_KEY (base64-decoded automatically).
+    |            Set AUDIT_SIGNING_KEY in .env for a dedicated key.
+    | algorithm: Any algorithm supported by PHP hash_hmac() — sha256, sha512, etc.
+    |
+    | Verify integrity: php artisan audit-events:verify
+    |
+    | Note: Enabling this after records already exist will leave pre-existing
+    | rows with null signatures. The verify command reports them as "unsigned"
+    | rather than "tampered".
+    |
+    | Requires migration: add_signature_to_audit_events_table
+    |
+    */
+    'integrity' => [
+        'enabled' => false,
+        'key' => null,  // Set to env('AUDIT_SIGNING_KEY') in your config publish. Null falls back to APP_KEY.
+        'algorithm' => 'sha256',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Archiving (Cold Storage)
+    |--------------------------------------------------------------------------
+    |
+    | Move audit records older than `archive_after_days` to cold storage instead
+    | of deleting them. This satisfies legal retention requirements while keeping
+    | the hot audit_events table lean.
+    |
+    | Drivers:
+    |   database  — Copies rows to a dedicated archive table (same DB connection).
+    |               Each batch is wrapped in a transaction: archive then delete.
+    |   json_file — Appends JSONL lines to daily files under `path`.
+    |               Files can be compressed and shipped to S3 or a log aggregator.
+    |
+    | archive_after_days: Records older than this are candidates for archiving.
+    | table_name:         Archive table (database driver).
+    | path:               Filesystem directory for JSONL files (json_file driver).
+    |
+    | Run:      php artisan audit-events:archive
+    | Schedule: $schedule->command('audit-events:archive')->weekly();
+    |
+    | Requires migration: create_audit_events_archive_table (database driver)
+    |
+    */
+    'archive' => [
+        'enabled' => false,
+        'archive_after_days' => 90,
+        'driver' => 'database',    // 'database' | 'json_file'
+        'table_name' => 'audit_events_archive',
+        'path' => null,            // Defaults to storage_path('audit-archives') when null
+    ],
 ];

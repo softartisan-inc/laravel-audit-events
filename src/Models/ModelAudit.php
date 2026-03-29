@@ -12,9 +12,12 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Schema;
 use SoftArtisan\LaravelAuditEvents\AuditContext;
+use SoftArtisan\LaravelAuditEvents\Services\AuditSignatureService;
 
 /**
  * @phpstan-consistent-constructor
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
  */
 class ModelAudit extends Model
 {
@@ -40,6 +43,8 @@ class ModelAudit extends Model
             $fields['old_values'],
             $fields['new_values'],
             $fields['context'],
+            'signature',
+            'previous_hash',
             "{$morphName}_type",
             "{$morphName}_id",
         ];
@@ -97,6 +102,32 @@ class ModelAudit extends Model
         }
 
         $instance = new self;
+
+        if (config('audit-events.integrity.enabled', false)) {
+            /** @var AuditSignatureService $signer */
+            $signer = app(AuditSignatureService::class);
+            $tableName = config('audit-events.table_name', 'audit_events');
+            $previousHash = $signer->getPreviousHash(null, null, $tableName);
+
+            $payload = [
+                'auditable_type' => null,
+                'auditable_id' => null,
+                'event' => $data[$fields['event']],
+                'user_id' => $userId,
+                'old_values' => [],
+                'new_values' => [],
+                'context' => $context,
+                'created_at' => now()->toIso8601String(),
+                'previous_hash' => $previousHash,
+            ];
+
+            $key = config('audit-events.integrity.key') ?? config('app.key');
+            $algorithm = config('audit-events.integrity.algorithm', 'sha256');
+
+            $data['signature'] = $signer->computeSignature($payload, $key, $algorithm);
+            $data['previous_hash'] = $previousHash;
+        }
+
         $instance->forceFill($data)->save();
 
         return $instance;
@@ -211,6 +242,57 @@ class ModelAudit extends Model
         $column = $this->getCreatedAtColumn();
 
         return static::where($column, '<', now()->subDays($days));
+    }
+
+    /**
+     * Whether this record carries a cryptographic signature.
+     */
+    public function isSigned(): bool
+    {
+        return $this->getAttribute('signature') !== null;
+    }
+
+    /**
+     * Verify the integrity signature of this single audit record.
+     *
+     * Returns true if the record is valid, false if tampered or unsigned.
+     *
+     * @throws \RuntimeException if integrity is not enabled in config.
+     */
+    public function verifySignature(): bool
+    {
+        if (! config('audit-events.integrity.enabled', false)) {
+            throw new \RuntimeException('Integrity verification is disabled. Enable audit-events.integrity.enabled in config.');
+        }
+
+        $storedSignature = $this->getAttribute('signature');
+
+        if ($storedSignature === null) {
+            return false;
+        }
+
+        $fields = config('audit-events.table_fields');
+        $morphName = $fields['morph_prefix'] ?? 'auditable';
+
+        $payload = [
+            'auditable_type' => $this->getAttribute("{$morphName}_type"),
+            'auditable_id' => $this->getAttribute("{$morphName}_id"),
+            'event' => $this->getAttribute($fields['event']),
+            'user_id' => $this->getAttribute($fields['user_id']),
+            'old_values' => (array) ($this->getAttribute($fields['old_values']) ?? []),
+            'new_values' => (array) ($this->getAttribute($fields['new_values']) ?? []),
+            'context' => $this->getAttribute($fields['context']),
+            'created_at' => $this->getAttribute('created_at')?->toIso8601String(),
+            'previous_hash' => $this->getAttribute('previous_hash'),
+        ];
+
+        $key = config('audit-events.integrity.key') ?? config('app.key');
+        $algorithm = config('audit-events.integrity.algorithm', 'sha256');
+
+        /** @var AuditSignatureService $signer */
+        $signer = app(AuditSignatureService::class);
+
+        return $signer->verifySignature($storedSignature, $payload, $key, $algorithm);
     }
 
     // ── Private helpers ────────────────────────────────────────────────────

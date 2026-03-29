@@ -3,7 +3,10 @@
 namespace SoftArtisan\LaravelAuditEvents;
 
 use Illuminate\Console\Scheduling\Schedule;
+use SoftArtisan\LaravelAuditEvents\Commands\AuditEventsArchiveCommand;
 use SoftArtisan\LaravelAuditEvents\Commands\AuditEventsStatsCommand;
+use SoftArtisan\LaravelAuditEvents\Commands\AuditEventsVerifyCommand;
+use SoftArtisan\LaravelAuditEvents\Services\AuditSignatureService;
 use SoftArtisan\LaravelAuditEvents\Models\ModelAudit;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -19,14 +22,23 @@ class LaravelAuditEventsServiceProvider extends PackageServiceProvider
                 'create_audit_events_table',
                 'rename_model_audits_to_audit_events_table',
                 'add_context_to_audit_events_table',
+                'add_signature_to_audit_events_table',
+                'create_audit_events_archive_table',
             ])
-            ->hasCommand(AuditEventsStatsCommand::class);
+            ->hasCommands([
+                AuditEventsStatsCommand::class,
+                AuditEventsVerifyCommand::class,
+                AuditEventsArchiveCommand::class,
+            ]);
     }
 
     public function packageBooted(): void
     {
         // Register AuditContext as a singleton for DI usage
         $this->app->singleton(AuditContext::class, fn () => new AuditContext);
+
+        // Register AuditSignatureService as a singleton
+        $this->app->singleton(AuditSignatureService::class, fn () => new AuditSignatureService);
 
         // Auto-schedule pruning when enabled
         if (config('audit-events.pruning.enabled', false)) {

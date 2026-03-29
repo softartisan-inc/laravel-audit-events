@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Request;
 use SoftArtisan\LaravelAuditEvents\AuditContext;
 use SoftArtisan\LaravelAuditEvents\Models\ModelAudit;
+use SoftArtisan\LaravelAuditEvents\Services\AuditSignatureService;
 
 /**
  * Trait IsAuditable
@@ -256,6 +257,34 @@ trait IsAuditable
             $data[$fields['user_agent']] = Request::userAgent();
         } catch (\Throwable) {
             // Not in an HTTP context
+        }
+
+        if (config('audit-events.integrity.enabled', false)) {
+            /** @var AuditSignatureService $signer */
+            $signer = app(AuditSignatureService::class);
+            $morphName = $fields['morph_prefix'] ?? 'auditable';
+            $morphType = $this->getMorphClass();
+            $morphId = $this->getKey();
+            $tableName = config('audit-events.table_name', 'audit_events');
+            $previousHash = $signer->getPreviousHash($morphType, $morphId, $tableName);
+
+            $payload = [
+                'auditable_type' => $morphType,
+                'auditable_id' => $morphId,
+                'event' => $event,
+                'user_id' => $userId,
+                'old_values' => $oldValues,
+                'new_values' => $newValues,
+                'context' => $context ?: null,
+                'created_at' => now()->toIso8601String(),
+                'previous_hash' => $previousHash,
+            ];
+
+            $key = config('audit-events.integrity.key') ?? config('app.key');
+            $algorithm = config('audit-events.integrity.algorithm', 'sha256');
+
+            $data['signature'] = $signer->computeSignature($payload, $key, $algorithm);
+            $data['previous_hash'] = $previousHash;
         }
 
         $this->audits()->create($data);

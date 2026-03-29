@@ -8,12 +8,13 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create(config('audit-events.table_name', 'audit_events'), function (Blueprint $table) {
-            $fields = config('audit-events.table_fields');
-            $table->id($fields['id']);
+        $archiveTable = config('audit-events.archive.table_name', 'audit_events_archive');
+        $fields = config('audit-events.table_fields');
+        $morphName = $fields['morph_prefix'] ?? 'auditable';
+        $morphType = $fields['morph_type'] ?? 'string';
 
-            $morphName = config('audit-events.table_fields.morph_prefix', 'auditable');
-            $morphType = config('audit-events.table_fields.morph_type', 'string');
+        Schema::create($archiveTable, function (Blueprint $table) use ($fields, $morphName, $morphType) {
+            $table->id($fields['id']);
 
             $table->string("{$morphName}_type")->nullable();
             match ($morphType) {
@@ -34,13 +35,15 @@ return new class extends Migration
             $table->string('signature', 64)->nullable();
             $table->string('previous_hash', 64)->nullable();
             $table->timestamps();
+            $table->timestamp('archived_at')->useCurrent();
 
             $table->index(["{$morphName}_type", "{$morphName}_id"]);
+            $table->index('archived_at');
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists(config('audit-events.table_name', 'audit_events'));
+        Schema::dropIfExists(config('audit-events.archive.table_name', 'audit_events_archive'));
     }
 };

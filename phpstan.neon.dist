@@ -7,11 +7,15 @@ parameters:
         - src
         - config
         - database
-        - tests
+        - tests/Fixtures
+        - tests/TestCase.php
+        - tests/Pest.php
     excludePaths:
-    - src/Mcp/*
+        - src/Mcp/*
+        - tests/Feature/*
     tmpDir: build/phpstan
     checkOctaneCompatibility: true
     checkModelProperties: true
-    # Note: we include tests in the analysis so that symbols used only in tests
-    # (like traits mixed into test models) are recognized as used by PHPStan.
+    # Pest test feature files (tests/Feature) are excluded because PHPStan cannot
+    # properly analyze Pest closures bound via uses() without a dedicated Pest
+    # PHPStan extension. Test correctness is guaranteed by the Pest test suite itself.

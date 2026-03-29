@@ -8,21 +8,21 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('model_audits', function (Blueprint $table) {
-            $fields = config('model-audits.table_fields');
+        Schema::create(config('audit-events.table_name', 'audit_events'), function (Blueprint $table) {
+            $fields = config('audit-events.table_fields');
             $table->id($fields['id']);
 
-            $morphName = config('model-audits.table_fields.morph_prefix');
-            $morphType = config('model-audits.table_fields.morph_type', 'integer');
+            $morphName = config('audit-events.table_fields.morph_prefix', 'auditable');
+            $morphType = config('audit-events.table_fields.morph_type', 'string');
 
-            // Création manuelle pour plus de contrôle
-            $table->string("{$morphName}_type");
+            $table->string("{$morphName}_type")->nullable();
             match ($morphType) {
-                'uuid' => $table->uuid("{$morphName}_id"),
-                'ulid' => $table->ulid("{$morphName}_id"),
-                'string' => $table->string("{$morphName}_id", 64),
-                default => $table->unsignedBigInteger("{$morphName}_id"),
+                'uuid' => $table->uuid("{$morphName}_id")->nullable(),
+                'ulid' => $table->ulid("{$morphName}_id")->nullable(),
+                'string' => $table->string("{$morphName}_id", 64)->nullable(),
+                default => $table->unsignedBigInteger("{$morphName}_id")->nullable(),
             };
+
             $table->string($fields['event'])->nullable();
             $table->unsignedBigInteger($fields['user_id'])->nullable();
             $table->text($fields['url'])->nullable();
@@ -30,6 +30,7 @@ return new class extends Migration
             $table->text($fields['user_agent'])->nullable();
             $table->json($fields['old_values'])->nullable();
             $table->json($fields['new_values'])->nullable();
+            $table->json($fields['context'])->nullable();
             $table->timestamps();
 
             $table->index(["{$morphName}_type", "{$morphName}_id"]);
@@ -38,6 +39,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('payments');
+        Schema::dropIfExists(config('audit-events.table_name', 'audit_events'));
     }
 };

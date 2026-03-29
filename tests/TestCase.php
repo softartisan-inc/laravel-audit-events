@@ -1,12 +1,12 @@
 <?php
 
-namespace SoftArtisan\LaravelModelAudits\Tests;
+namespace SoftArtisan\LaravelAuditEvents\Tests;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Orchestra\Testbench\TestCase as Orchestra;
-use SoftArtisan\LaravelModelAudits\LaravelModelAuditsServiceProvider;
+use SoftArtisan\LaravelAuditEvents\LaravelAuditEventsServiceProvider;
 
 class TestCase extends Orchestra
 {
@@ -15,20 +15,19 @@ class TestCase extends Orchestra
         parent::setUp();
 
         Factory::guessFactoryNamesUsing(
-            fn (string $modelName) => 'SoftArtisan\\LaravelModelAudits\\Database\\Factories\\'.class_basename($modelName).'Factory'
+            fn (string $modelName) => 'SoftArtisan\\LaravelAuditEvents\\Database\\Factories\\'.class_basename($modelName).'Factory'
         );
     }
 
-    protected function getPackageProviders($app)
+    protected function getPackageProviders($app): array
     {
         return [
-            LaravelModelAuditsServiceProvider::class,
+            LaravelAuditEventsServiceProvider::class,
         ];
     }
 
     protected function defineEnvironment($app): void
     {
-        // Base de données SQLite en mémoire
         $app['config']->set('database.default', 'testing');
         $app['config']->set('database.connections.testing', [
             'driver' => 'sqlite',
@@ -39,19 +38,17 @@ class TestCase extends Orchestra
 
     protected function defineDatabaseMigrations(): void
     {
-        // Charger les migrations du package
         $this->loadMigrationsFrom(realpath(__DIR__.'/../database/migrations'));
 
-        // Créer la table articles pour les tests
         Schema::create('articles', function (Blueprint $table) {
             $table->id();
             $table->string('title');
             $table->text('content')->nullable();
             $table->string('secret_token')->nullable();
+            $table->json('extra_fields')->nullable();
             $table->timestamps();
         });
 
-        // Créer une table avec soft deletes pour les tests spécifiques
         Schema::create('soft_articles', function (Blueprint $table) {
             $table->id();
             $table->string('title');
@@ -59,6 +56,12 @@ class TestCase extends Orchestra
             $table->string('secret_token')->nullable();
             $table->timestamps();
             $table->softDeletes();
+        });
+
+        Schema::create('roles', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->timestamps();
         });
     }
 }

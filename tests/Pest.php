@@ -1,5 +1,5 @@
 <?php
 
-use SoftArtisan\LaravelModelAudits\Tests\TestCase;
+use SoftArtisan\LaravelAuditEvents\Tests\TestCase;
 
 uses(TestCase::class)->in(__DIR__);

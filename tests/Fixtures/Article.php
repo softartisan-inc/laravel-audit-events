@@ -1,9 +1,9 @@
 <?php
 
-namespace SoftArtisan\LaravelModelAudits\Tests\Fixtures;
+namespace SoftArtisan\LaravelAuditEvents\Tests\Fixtures;
 
 use Illuminate\Database\Eloquent\Model;
-use SoftArtisan\LaravelModelAudits\Concerns\IsAuditable;
+use SoftArtisan\LaravelAuditEvents\Concerns\IsAuditable;
 
 class Article extends Model
 {
@@ -13,7 +13,10 @@ class Article extends Model
 
     protected $guarded = [];
 
-    // Ajoute un champ à masquer pour les tests, sans redéclarer la propriété du trait
+    protected $casts = [
+        'extra_fields' => 'array',
+    ];
+
     public function getHiddenForAudit(): array
     {
         return array_merge($this->getHiddenForAuditFromTrait(), ['secret_token']);

@@ -1,10 +1,10 @@
 <?php
 
-namespace SoftArtisan\LaravelModelAudits\Tests\Fixtures;
+namespace SoftArtisan\LaravelAuditEvents\Tests\Fixtures;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use SoftArtisan\LaravelModelAudits\Concerns\IsAuditable;
+use SoftArtisan\LaravelAuditEvents\Concerns\IsAuditable;
 
 class SoftArticle extends Model
 {

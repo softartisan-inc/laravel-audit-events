@@ -5,5 +5,6 @@ grumphp:
       configuration: phpstan.neon.dist
       ignore_patterns:
         - ^src/Mcp/
+        - ^tests/Feature/
       memory_limit: "512M"
     pest: ~

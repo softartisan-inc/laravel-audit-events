@@ -1,12 +1,12 @@
 <?php
 
-namespace SoftArtisan\LaravelModelAudits\Mcp\Servers;
+namespace SoftArtisan\LaravelAuditEvents\Mcp\Servers;
 
 use Laravel\Mcp\Server;
-use SoftArtisan\LaravelModelAudits\Mcp\Prompts\AuditAnalysisPrompt;
-use SoftArtisan\LaravelModelAudits\Mcp\Tools\AuditHistoryTool;
+use SoftArtisan\LaravelAuditEvents\Mcp\Prompts\AuditAnalysisPrompt;
+use SoftArtisan\LaravelAuditEvents\Mcp\Tools\AuditHistoryTool;
 
-class ModelAuditsServer extends Server
+class AuditEventsServer extends Server
 {
     /** @var array<int, class-string> */
     protected array $tools = [

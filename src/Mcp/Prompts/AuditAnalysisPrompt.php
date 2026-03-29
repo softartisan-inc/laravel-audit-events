@@ -1,6 +1,6 @@
 <?php
 
-namespace SoftArtisan\LaravelModelAudits\Mcp\Prompts;
+namespace SoftArtisan\LaravelAuditEvents\Mcp\Prompts;
 
 use Laravel\Mcp\Response;
 use Laravel\Mcp\ResponseFactory;

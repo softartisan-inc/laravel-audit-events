@@ -1,13 +1,13 @@
 <?php
 
-namespace SoftArtisan\LaravelModelAudits\Mcp\Tools;
+namespace SoftArtisan\LaravelAuditEvents\Mcp\Tools;
 
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Tool;
-use SoftArtisan\LaravelModelAudits\Models\ModelAudit;
+use SoftArtisan\LaravelAuditEvents\Models\ModelAudit;
 
 class AuditHistoryTool extends Tool
 {
@@ -18,7 +18,7 @@ class AuditHistoryTool extends Tool
     /**
      * Define input schema: model_type, model_id, limit
      *
-     * @return array<string, \Illuminate\Contracts\JsonSchema\JsonSchema>
+     * @return array<string, JsonSchema>
      */
     public function schema(JsonSchema $schema): array
     {
@@ -51,7 +51,7 @@ class AuditHistoryTool extends Tool
 
         // Build query to fetch audits
         $auditModel = app(ModelAudit::class);
-        $fields = config('model-audits.table_fields');
+        $fields = config('audit-events.table_fields');
         $morphPrefix = (string) ($fields['morph_prefix'] ?? 'auditable');
 
         $audits = ModelAudit::query()

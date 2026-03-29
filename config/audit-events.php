@@ -1,6 +1,8 @@
 <?php
 
-// Configuration for SoftArtisan/LaravelModelAudits
+use SoftArtisan\LaravelAuditEvents\Models\ModelAudit;
+
+// Configuration for SoftArtisan/LaravelAuditEvents
 return [
 
     /*
@@ -9,12 +11,13 @@ return [
     |--------------------------------------------------------------------------
     |
     | The database table and Eloquent model that store your audit entries.
-    | You usually don't need to change the model class unless you extend it.
+    | Renamed from 'model_audits' to 'audit_events' in v2.0 (breaking change).
+    | Existing installations must run the rename migration.
     |
     */
-    'table_name' => 'model_audits',
+    'table_name' => 'audit_events',
 
-    'model_class' => \SoftArtisan\LaravelModelAudits\Models\ModelAudit::class,
+    'model_class' => ModelAudit::class,
 
     /*
     |--------------------------------------------------------------------------
@@ -42,6 +45,7 @@ return [
         'user_agent' => 'user_agent',    // Request UA
         'old_values' => 'old_values',    // JSON column storing previous attributes
         'new_values' => 'new_values',    // JSON column storing new attributes
+        'context' => 'context',       // JSON column for arbitrary event payload (v2)
     ],
 
     // Toggle which model lifecycle events produce audits
@@ -55,12 +59,12 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Events to Audit
+    | Events Whitelist (Eloquent auto-events only)
     |--------------------------------------------------------------------------
     |
-    | Whitelisted events that can be recorded. If an event is not present in
-    | this list, attempts to record it will be ignored (a warning may be logged
-    | in APP_DEBUG mode). You can add/remove events based on your needs.
+    | Only applies to automatic Eloquent lifecycle events (created, updated,
+    | deleted, restored). Events recorded via saveHistory() or ModelAudit::record()
+    | are NOT subject to this whitelist — the caller is responsible.
     |
     */
     'events' => [
@@ -91,12 +95,27 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Deep JSON Diff
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, getDiff() will recursively diff array/JSON fields to show
+    | exactly which sub-keys changed, up to max_depth levels deep.
+    |
+    */
+    'json_diff' => [
+        'enabled' => true,
+        'max_depth' => 3,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | User Resolver
     |--------------------------------------------------------------------------
     |
     | How to resolve the acting user ("causer"). By default, the package will
     | attempt guards in the order listed below. You can also provide a callable
     | resolver that returns the authenticated user instance.
+    | In jobs, use AuditContext::actingAs($userId) to inject the causer manually.
     |
     */
     'user' => [
@@ -109,13 +128,19 @@ return [
     | Pruning (Auto-cleanup)
     |--------------------------------------------------------------------------
     |
-    | Automatically remove audit rows older than the configured retention. To
-    | enable pruning, set 'enabled' to true and schedule Laravel's model:prune
-    | command in your app's Console\Kernel.
+    | Automatically remove audit rows older than the configured retention.
+    | The keep_for_days value is read dynamically at every pruning run —
+    | never cached — so multi-tenant apps can override it per-tenant.
+    |
+    | Example (bootstrap/app.php or Console/Kernel.php):
+    |   Schedule::command('model:prune', ['--model' => [ModelAudit::class]])->daily();
+    |
+    | Multi-tenant example — tenant with 5-year legal obligation:
+    |   'pruning' => ['enabled' => true, 'keep_for_days' => 1825],
     |
     */
     'pruning' => [
         'enabled' => false,
-        'keep_for_days' => 90,
+        'keep_for_days' => 365,  // Override per-tenant for different retention policies
     ],
 ];

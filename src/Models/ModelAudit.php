@@ -67,6 +67,14 @@ class ModelAudit extends Model
     }
 
     /**
+     * Filter audits by event name.
+     */
+    public function scopeWhereEvent(Builder $query, string $event): Builder
+    {
+        return $query->where(config('audit-events.table_fields.event', 'event'), $event);
+    }
+
+    /**
      * Record a free-standing audit event not bound to any Eloquent model.
      *
      * Use this for actions that have no Eloquent anchor: login, logout,

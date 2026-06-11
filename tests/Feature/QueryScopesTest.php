@@ -12,3 +12,13 @@ it('filters audits by event name via whereEvent scope', function () {
         ->and(ModelAudit::whereEvent('user.logged_in')->count())->toBe(1)
         ->and(ModelAudit::whereEvent('nope')->count())->toBe(0);
 });
+
+it('filters audits by a context key via whereContext scope', function () {
+    ModelAudit::record('asset.status_changed', ['mission_id' => 42, 'new_status' => 'MISSING']);
+    ModelAudit::record('asset.status_changed', ['mission_id' => 42, 'new_status' => 'ACTIVE']);
+    ModelAudit::record('asset.status_changed', ['mission_id' => 99, 'new_status' => 'ACTIVE']);
+
+    expect(ModelAudit::whereContext('mission_id', 42)->count())->toBe(2)
+        ->and(ModelAudit::whereContext('mission_id', 99)->count())->toBe(1)
+        ->and(ModelAudit::whereContext('mission_id', 42)->whereContext('new_status', 'ACTIVE')->count())->toBe(1);
+});

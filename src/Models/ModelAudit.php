@@ -75,6 +75,17 @@ class ModelAudit extends Model
     }
 
     /**
+     * Filter audits by a key inside the JSON context column.
+     * Uses Laravel's portable JSON path operator (works on MySQL, Postgres, SQLite).
+     */
+    public function scopeWhereContext(Builder $query, string $key, mixed $value): Builder
+    {
+        $column = config('audit-events.table_fields.context', 'context');
+
+        return $query->where("{$column}->{$key}", $value);
+    }
+
+    /**
      * Record a free-standing audit event not bound to any Eloquent model.
      *
      * Use this for actions that have no Eloquent anchor: login, logout,

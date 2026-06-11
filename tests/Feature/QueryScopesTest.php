@@ -22,3 +22,13 @@ it('filters audits by a context key via whereContext scope', function () {
         ->and(ModelAudit::whereContext('mission_id', 99)->count())->toBe(1)
         ->and(ModelAudit::whereContext('mission_id', 42)->whereContext('new_status', 'ACTIVE')->count())->toBe(1);
 });
+
+it('filters audits anchored to a given model via forAuditable scope', function () {
+    $a = Article::create(['title' => 'A']); // crée un audit "created" ancré à $a
+    $b = Article::create(['title' => 'B']); // crée un audit "created" ancré à $b
+    $a->update(['title' => 'A2']);           // crée un audit "updated" ancré à $a
+
+    expect(ModelAudit::forAuditable($a)->count())->toBe(2)
+        ->and(ModelAudit::forAuditable($b)->count())->toBe(1)
+        ->and(ModelAudit::forAuditable($a)->whereEvent('updated')->count())->toBe(1);
+});

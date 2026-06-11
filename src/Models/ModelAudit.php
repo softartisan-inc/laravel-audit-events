@@ -86,6 +86,17 @@ class ModelAudit extends Model
     }
 
     /**
+     * Filter audits anchored to a specific Eloquent model instance.
+     */
+    public function scopeForAuditable(Builder $query, Model $model): Builder
+    {
+        $morph = config('audit-events.table_fields.morph_prefix', 'auditable');
+
+        return $query->where("{$morph}_type", $model->getMorphClass())
+            ->where("{$morph}_id", $model->getKey());
+    }
+
+    /**
      * Record a free-standing audit event not bound to any Eloquent model.
      *
      * Use this for actions that have no Eloquent anchor: login, logout,

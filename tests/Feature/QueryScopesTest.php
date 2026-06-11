@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Schema;
 use SoftArtisan\LaravelAuditEvents\Models\ModelAudit;
 use SoftArtisan\LaravelAuditEvents\Tests\Fixtures\Article;
 
@@ -36,6 +37,6 @@ it('filters audits anchored to a given model via forAuditable scope', function (
 it('has a database index on the event column', function () {
     $table = config('audit-events.table_name', 'audit_events');
 
-    expect(\Illuminate\Support\Facades\Schema::hasIndex($table, [config('audit-events.table_fields.event', 'event')]))
+    expect(Schema::hasIndex($table, [config('audit-events.table_fields.event', 'event')]))
         ->toBeTrue();
 });

@@ -32,3 +32,10 @@ it('filters audits anchored to a given model via forAuditable scope', function (
         ->and(ModelAudit::forAuditable($b)->count())->toBe(1)
         ->and(ModelAudit::forAuditable($a)->whereEvent('updated')->count())->toBe(1);
 });
+
+it('has a database index on the event column', function () {
+    $table = config('audit-events.table_name', 'audit_events');
+
+    expect(\Illuminate\Support\Facades\Schema::hasIndex($table, [config('audit-events.table_fields.event', 'event')]))
+        ->toBeTrue();
+});

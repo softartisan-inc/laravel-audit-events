@@ -1,7 +1,7 @@
 {
     "name": "softartisan/laravel-audit-events",
     "description": "A lightweight Laravel package that automatically audits Eloquent model changes and records free-standing semantic events — an activity log meets event sourcing.",
-    "version": "2.0.0",
+    "version": "2.1.0",
     "keywords": [
         "softartisan",
         "laravel",

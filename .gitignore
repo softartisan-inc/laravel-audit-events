@@ -33,3 +33,5 @@ testbench.yaml
 
 # Internal-only docs (never publish)
 /docs/private/
+.claude/
+.phpunit.cache/

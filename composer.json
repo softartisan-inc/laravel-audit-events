@@ -1,26 +1,35 @@
 {
     "name": "softartisan/laravel-audit-events",
-    "description": "A lightweight Laravel package that automatically audits Eloquent model changes and records free-standing semantic events — an activity log meets event sourcing.",
-    "version": "2.1.0",
+    "description": "Tamper-evident audit trail for Laravel: automatic Eloquent model auditing, free-standing semantic events, an HMAC hash-chain integrity guarantee, and cold archiving for long-term compliance.",
     "keywords": [
         "softartisan",
         "laravel",
         "laravel-audit-events",
         "audit",
         "audit-trail",
-        "event-log"
+        "audit-log",
+        "activity-log",
+        "event-sourcing",
+        "compliance",
+        "tamper-evident",
+        "integrity"
     ],
     "homepage": "https://github.com/softartisan-inc/laravel-audit-events",
     "license": "MIT",
     "authors": [
         {
             "name": "SoftArtisan",
-            "email": "henoc35@gmail.com",
+            "email": "henoc.djabia@softartisan.net",
+            "homepage": "https://softartisan.net",
             "role": "Developer"
         }
     ],
+    "support": {
+        "issues": "https://github.com/softartisan-inc/laravel-audit-events/issues",
+        "source": "https://github.com/softartisan-inc/laravel-audit-events"
+    },
     "require": {
-        "php": "^8.4",
+        "php": "^8.2",
         "illuminate/contracts": "^11.0||^12.0",
         "spatie/laravel-package-tools": "^1.16"
     },
@@ -97,6 +106,6 @@
             }
         }
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "prefer-stable": true
 }

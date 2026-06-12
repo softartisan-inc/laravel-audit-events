@@ -6,6 +6,24 @@
 
 A production-ready Laravel package that **automatically audits Eloquent model changes**, records **free-standing semantic events**, guarantees **cryptographic integrity** of every audit record, and provides a **cold archiving** strategy for long-term retention — designed for ERP systems and compliance-sensitive applications.
 
+### Why another audit package?
+
+`spatie/laravel-activitylog` and `owen-it/laravel-auditing` are excellent and, for
+most apps, the right choice. Reach for **this** package when you specifically need:
+
+- **Tamper-evidence** — an HMAC hash-chain per record with a `verify` command, not
+  just a log table anyone with DB access can silently edit. ([threat model](./SECURITY.md))
+- **One model for everything** — automatic model audits **and** free-standing
+  semantic events (`user.logged_in`, `csv.exported`, `impersonation.started`) in a
+  single, queryable table.
+- **Compliance retention built in** — cold archiving to a DB table or JSONL files,
+  per-tenant retention, and pruning.
+- **Multi-tenant by accident, not by coupling** — writes to the current connection,
+  zero dependency on any tenancy package (works the same in a plain Laravel app).
+
+If you don't need integrity guarantees or free-standing events, the established
+packages are lighter. We'd rather you pick the right tool.
+
 > **v2.0 — breaking changes**: Package renamed from `softartisan/laravel-model-audits` to `softartisan/laravel-audit-events`. See the [Upgrade Guide](#upgrade-from-v1x) below.
 
 > 📖 **Looking for "how do I do X?"** See the scenario-driven

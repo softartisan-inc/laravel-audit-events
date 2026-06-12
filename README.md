@@ -8,6 +8,11 @@ A production-ready Laravel package that **automatically audits Eloquent model ch
 
 > **v2.0 — breaking changes**: Package renamed from `softartisan/laravel-model-audits` to `softartisan/laravel-audit-events`. See the [Upgrade Guide](#upgrade-from-v1x) below.
 
+> 📖 **Looking for "how do I do X?"** See the scenario-driven
+> **[Use-Case Cookbook → `USE-CASES.md`](./USE-CASES.md)** — every use case
+> (auto-audit, manual/free events, jobs, revert, export, multi-tenant isolation,
+> impersonation, integrity, retention, frontend rendering…) with copy-paste code.
+
 ---
 
 ## Features
@@ -145,6 +150,32 @@ $invoice->getAuditHistory('invoice.sent')->get(); // any event name
 $audit = $invoice->getUpdatedHistory()->latest()->first();
 $diff  = $audit->getDiff();
 // ['amount' => ['old' => 100, 'new' => 250]]
+```
+
+### Query scopes on `ModelAudit`
+
+For querying across the whole `audit_events` table (not just one model's `audits()`
+relation), three local scopes are available:
+
+```php
+use SoftArtisan\LaravelAuditEvents\Models\ModelAudit;
+
+// Filter by event name (CRUD or semantic).
+ModelAudit::whereEvent('asset.status_changed')->get();
+
+// Filter by a key inside the JSON `context` column (portable across
+// MySQL / PostgreSQL / SQLite via Laravel's `->` JSON path operator).
+ModelAudit::whereContext('mission_id', 42)->get();
+
+// Filter by the anchored model instance (uses the indexed morph columns).
+ModelAudit::forAuditable($invoice)->get();
+
+// Compose them freely.
+ModelAudit::forAuditable($asset)
+    ->whereEvent('asset.status_changed')
+    ->whereContext('mission_id', 42)
+    ->latest('created_at')
+    ->get();
 ```
 
 ---

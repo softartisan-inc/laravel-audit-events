@@ -56,6 +56,6 @@ it('handles empty table gracefully', function () {
 it('--model option limits verification to a specific auditable_type', function () {
     Article::create(['title' => 'Article']);
 
-    $this->artisan('audit-events:verify', ['--model' => \SoftArtisan\LaravelAuditEvents\Tests\Fixtures\Article::class])
+    $this->artisan('audit-events:verify', ['--model' => Article::class])
         ->assertExitCode(0);
 });

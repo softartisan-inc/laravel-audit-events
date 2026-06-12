@@ -61,7 +61,7 @@ class AuditSignatureService
      * (no auditable), scoped by user_id. Returns null when no prior record exists.
      */
     public function getPreviousHash(
-        string|null $auditableType,
+        ?string $auditableType,
         string|int|null $auditableId,
         string $tableName
     ): ?string {

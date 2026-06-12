@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Schema;
@@ -16,8 +17,9 @@ use SoftArtisan\LaravelAuditEvents\Services\AuditSignatureService;
 
 /**
  * @phpstan-consistent-constructor
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ *
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  */
 class ModelAudit extends Model
 {

@@ -116,7 +116,7 @@ class AuditEventsVerifyCommand extends Command
         $this->line("  Records checked : <fg=yellow;options=bold>{$total}</>");
         $this->line("  Verified        : <fg=green;options=bold>{$verified}</>");
         $this->line("  Unsigned        : <fg=yellow>{$unsigned}</> (pre-date integrity feature)");
-        $this->line("  Tampered        : <fg=".($failed > 0 ? 'red' : 'green').";options=bold>{$failed}</>");
+        $this->line('  Tampered        : <fg='.($failed > 0 ? 'red' : 'green').";options=bold>{$failed}</>");
 
         if ($failed > 0) {
             $this->line('');

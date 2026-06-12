@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\DB;
 use SoftArtisan\LaravelAuditEvents\Models\ModelAudit;
 use SoftArtisan\LaravelAuditEvents\Services\AuditSignatureService;
 use SoftArtisan\LaravelAuditEvents\Tests\Fixtures\Article;
@@ -62,7 +63,7 @@ it('verifySignature returns false when signature is tampered', function () {
     $audit = $article->audits()->latest($fields['id'])->first();
 
     // Directly tamper the signature in DB
-    \Illuminate\Support\Facades\DB::table(config('audit-events.table_name', 'audit_events'))
+    DB::table(config('audit-events.table_name', 'audit_events'))
         ->where($fields['id'], $audit->getKey())
         ->update(['signature' => str_repeat('0', 64)]);
 
@@ -75,7 +76,7 @@ it('verifySignature throws when integrity is disabled', function () {
     config()->set('audit-events.integrity.enabled', false);
     $audit = new ModelAudit;
 
-    expect(fn () => $audit->verifySignature())->toThrow(\RuntimeException::class);
+    expect(fn () => $audit->verifySignature())->toThrow(RuntimeException::class);
 });
 
 it('first record in chain has null previous_hash', function () {

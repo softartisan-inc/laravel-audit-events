@@ -6,8 +6,8 @@ use Illuminate\Console\Scheduling\Schedule;
 use SoftArtisan\LaravelAuditEvents\Commands\AuditEventsArchiveCommand;
 use SoftArtisan\LaravelAuditEvents\Commands\AuditEventsStatsCommand;
 use SoftArtisan\LaravelAuditEvents\Commands\AuditEventsVerifyCommand;
-use SoftArtisan\LaravelAuditEvents\Services\AuditSignatureService;
 use SoftArtisan\LaravelAuditEvents\Models\ModelAudit;
+use SoftArtisan\LaravelAuditEvents\Services\AuditSignatureService;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 

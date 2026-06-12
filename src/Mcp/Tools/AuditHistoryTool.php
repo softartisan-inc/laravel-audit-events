@@ -75,11 +75,11 @@ class AuditHistoryTool extends Tool
             ];
         })->all();
 
-        return Response::structured([
+        return Response::json([
             'model_class' => $modelClass,
             'model_id' => $modelId,
             'count' => count($results),
             'audits' => $results,
-        ])->asAssistant();
+        ]);
     }
 }

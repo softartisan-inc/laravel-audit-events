@@ -31,7 +31,7 @@ class AuditAnalysisPrompt extends Prompt
      */
     public function handle(): ResponseFactory
     {
-        $text = "Please retrieve the audit history for the model [model_class] (ID: [model_id]) using the 'get-model-audit-history' tool. Then, summarize the key changes, identify who made them, and flag any potentially suspicious modifications (like sensitive field changes).";
+        $text = "Please retrieve the audit history for the model [model_class] (ID: [model_id]) using the 'get_model_audit_history' tool. Then, summarize the key changes, identify who made them, and flag any potentially suspicious modifications (like sensitive field changes).";
 
         return Response::make([
             Response::text($text),

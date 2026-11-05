@@ -862,3 +862,14 @@ See [CHANGELOG.md](CHANGELOG.md).
 ## License
 
 MIT. See [LICENSE.md](LICENSE.md).
+
+## Ambient context (v2.2.0)
+
+```php
+// e.g. in a middleware: applied to every audit row until cleared, and signed with it.
+AuditContext::setAmbient(['impersonation' => ['by' => $adminId]]);
+// ...
+AuditContext::clearAmbient(); // AuditContext::reset() does NOT clear it
+```
+
+Ambient keys override caller keys; a caller can never set the `impersonation` key itself.

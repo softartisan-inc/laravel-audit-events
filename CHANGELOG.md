@@ -2,6 +2,13 @@
 
 All notable changes to `laravel-audit-events` will be documented in this file.
 
+## v2.2.0 - 2026-11-05
+
+### New Features
+
+* **Ambient audit context** — `AuditContext::setAmbient(array)`, `getAmbient()` and `clearAmbient()`. The ambient context is merged into the `context` of every audit row (model audits, `ModelAudit::record()`, relation audits) before the signature is computed, so it is covered by the integrity chain. Ambient keys win over caller keys, and a caller-supplied `impersonation` key is always stripped (it can only come from the ambient context). `AuditContext::reset()` does not clear it.
+* Without ambient context, payloads and signatures are byte-identical to v2.1.0.
+
 ## v2.1.0 - 2026-03-29
 
 ### New Features

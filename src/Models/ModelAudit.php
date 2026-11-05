@@ -116,6 +116,7 @@ class ModelAudit extends Model
     ): self {
         $fields = config('audit-events.table_fields');
         $userId = $causerId ?? AuditContext::getCauserId() ?? Auth::id();
+        $context = AuditContext::applyAmbient($context);
 
         $data = [
             $fields['event'] => $event,

@@ -242,6 +242,7 @@ trait IsAuditable
 
         $fields = config('audit-events.table_fields');
         $userId = AuditContext::getCauserId() ?? Auth::id();
+        $context = AuditContext::applyAmbient($context);
 
         $data = [
             $fields['event'] => $event,
